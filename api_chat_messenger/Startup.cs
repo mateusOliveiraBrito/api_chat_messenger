@@ -1,4 +1,5 @@
 ﻿using api_chat_messenger.Database;
+using api_chat_messenger.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,7 @@ namespace api_chat_messenger {
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddSignalR();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
@@ -32,6 +34,9 @@ namespace api_chat_messenger {
 
             app.UseHttpsRedirection();
             app.UseMvc();
+            app.UseSignalR(config => {
+                config.MapHub<ChatMessengerHub>("/ChatMessengerHub");
+            });
         }
     }
 }
