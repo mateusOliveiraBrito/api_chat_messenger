@@ -32,6 +32,13 @@ namespace api_chat_messenger {
                 app.UseHsts();
             }
 
+            app.UseCors(builder => {
+                builder.WithOrigins("https://localhost:5003")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+
             app.UseHttpsRedirection();
             app.UseMvc();
             app.UseSignalR(config => {
