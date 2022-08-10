@@ -35,7 +35,7 @@ namespace api_chat_messenger {
             }
 
             app.UseCors(builder => {
-                builder.WithOrigins("https://localhost:5003")
+                builder.WithOrigins("https://chatmessengerwebapp.azurewebsites.net")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
