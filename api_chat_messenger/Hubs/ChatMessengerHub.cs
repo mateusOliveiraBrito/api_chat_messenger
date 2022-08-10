@@ -63,6 +63,7 @@ namespace api_chat_messenger.Hubs {
 
         public async Task AdicionarConnectionIdDoUsuario(Usuario usuario) {
             var usuarioDoBanco = _databaseContext.Usuarios.First(u => u.Id == usuario.Id);
+            var gruposDoUsuario = await _databaseContext.Grupos.Where(grupo => grupo.Usuarios.Contains(usuarioDoBanco.Email)).ToListAsync();
 
             if (usuarioDoBanco.ConnectionId?.Length > 0) {
                 var connectionIdsBanco = JsonConvert.DeserializeObject<List<string>>(usuarioDoBanco.ConnectionId);
@@ -75,17 +76,27 @@ namespace api_chat_messenger.Hubs {
 
                     _databaseContext.Usuarios.Update(usuarioDoBanco);
                     await _databaseContext.SaveChangesAsync();
+
+                    foreach (var connectionId in connectionIdsBanco) {
+                        foreach (var grupo in gruposDoUsuario) {
+                            await Groups.AddToGroupAsync(connectionId, grupo.Nome);
+                        }
+                    }
                 }
 
                 return;
             }
 
             var connectionIds = new List<string>() { Context.ConnectionId };
-
             usuarioDoBanco.ConnectionId = JsonConvert.SerializeObject(connectionIds);
-
             _databaseContext.Usuarios.Update(usuarioDoBanco);
             await _databaseContext.SaveChangesAsync();
+
+            foreach (var connectionId in connectionIds) {
+                foreach (var grupo in gruposDoUsuario) {
+                    await Groups.AddToGroupAsync(connectionId, grupo.Nome);
+                }
+            }
         }
 
         public async Task RemoverConnectionIdDoUsuario(Usuario usuario) {
@@ -102,6 +113,13 @@ namespace api_chat_messenger.Hubs {
                     _databaseContext.Usuarios.Update(usuarioDoBanco);
                     await _databaseContext.SaveChangesAsync();
                 }
+
+                var gruposDoUsuario = await _databaseContext.Grupos.Where(grupo => grupo.Usuarios.Contains(usuarioDoBanco.Email)).ToListAsync();
+                foreach (var connectionId in connectionIds) {
+                    foreach (var grupo in gruposDoUsuario) {
+                        await Groups.RemoveFromGroupAsync(connectionId, grupo.Nome);
+                    }
+                }
             }
         }
 
@@ -114,20 +132,32 @@ namespace api_chat_messenger.Hubs {
             var nomeGrupo = CriarNomeGrupo(emailUsuarioLogado, emailUsuarioSelecionado);
             var grupoExistente = await _databaseContext.Grupos.FirstOrDefaultAsync(grupo => grupo.Nome == nomeGrupo);
 
-            var usuarioLogado = await _databaseContext.Usuarios.FirstAsync(usuario => usuario.Email == emailUsuarioLogado);
-            var usuarioSelecionado = await _databaseContext.Usuarios.FirstAsync(usuario => usuario.Email == emailUsuarioSelecionado);
-
             if (grupoExistente == null) {
-                var novoGrupo = new Grupo() {
+                grupoExistente = new Grupo() {
                     Nome = nomeGrupo,
-                    Usuarios = JsonConvert.SerializeObject(new List<Usuario>() {
-                        usuarioLogado,
-                        usuarioSelecionado
+                    Usuarios = JsonConvert.SerializeObject(new List<string>() {
+                        emailUsuarioLogado,
+                        emailUsuarioSelecionado
                     })
                 };
 
-                await _databaseContext.Grupos.AddAsync(novoGrupo);
+                await _databaseContext.Grupos.AddAsync(grupoExistente);
                 await _databaseContext.SaveChangesAsync();
+                return;
+            }
+
+            var emails = JsonConvert.DeserializeObject<List<string>>(grupoExistente.Usuarios);
+
+            var usuarioLogado = await _databaseContext.Usuarios.FirstAsync(usuario => usuario.Email == emails[0]);
+            var usuarioSelecionado = await _databaseContext.Usuarios.FirstAsync(usuario => usuario.Email == emails[1]);
+            var usuarios = new List<Usuario>() { usuarioLogado, usuarioSelecionado };
+
+            foreach (var usuario in usuarios) {
+                var connectionIdsDoUsuario = JsonConvert.DeserializeObject<List<string>>(usuario.ConnectionId);
+
+                foreach (var connectionId in connectionIdsDoUsuario) {
+                    await Groups.AddToGroupAsync(connectionId, nomeGrupo);
+                }
             }
         }
 
