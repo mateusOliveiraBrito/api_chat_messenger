@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using api_chat_messenger.Database;
 
 namespace api_chat_messenger.Migrations
 {
     [DbContext(typeof(ChatMessengerDatabaseContext))]
-    partial class ChatMessengerDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20220810171136_AddAlteracaoMensagem")]
+    partial class AddAlteracaoMensagem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
