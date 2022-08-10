@@ -39,7 +39,20 @@ namespace api_chat_messenger.Hubs {
                 return;
             }
 
+            usuarioLogado.isOnline = true;
+            _databaseContext.Usuarios.Update(usuarioLogado);
+            await _databaseContext.SaveChangesAsync();
             await Clients.Caller.SendAsync("ConfirmarLogin", true, usuarioLogado, string.Empty);
+        }
+
+        public async Task RealizarLogout(Usuario usuarioLogout) {
+            var usuarioLogado = _databaseContext.Usuarios.FirstOrDefault(usuario => usuario.Id == usuarioLogout.Id);
+
+            usuarioLogado.isOnline = false;
+            _databaseContext.Usuarios.Update(usuarioLogado);
+            await _databaseContext.SaveChangesAsync();
+
+            await RemoverConnectionIdDoUsuario(usuarioLogout);
         }
 
         public async Task AdicionarConnectionIdDoUsuario(Usuario usuario) {
