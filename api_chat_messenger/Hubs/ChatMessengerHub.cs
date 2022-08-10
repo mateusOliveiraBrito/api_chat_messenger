@@ -110,8 +110,15 @@ namespace api_chat_messenger.Hubs {
                     connectionIds.Remove(connectionIdAtual);
 
                     usuarioDoBanco.ConnectionId = JsonConvert.SerializeObject(connectionIds);
+
+                    if (connectionIds.Count <= 0) {
+                        usuarioDoBanco.isOnline = false;
+                    }
+
                     _databaseContext.Usuarios.Update(usuarioDoBanco);
                     await _databaseContext.SaveChangesAsync();
+
+                    await ObterListaDeUsuarios();
                 }
 
                 var gruposDoUsuario = await _databaseContext.Grupos.Where(grupo => grupo.Usuarios.Contains(usuarioDoBanco.Email)).ToListAsync();
