@@ -21,7 +21,9 @@ namespace api_chat_messenger {
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddSignalR();
+            services.AddSignalR(config => {
+                config.EnableDetailedErrors = true;
+            });
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
