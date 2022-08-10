@@ -109,5 +109,33 @@ namespace api_chat_messenger.Hubs {
             var usuarios = await _databaseContext.Usuarios.ToListAsync();
             await Clients.Caller.SendAsync("ReceberListaDeUsuarios", usuarios);
         }
+
+        public async Task CriarOuAbrirGrupo(string emailUsuarioLogado, string emailUsuarioSelecionado) {
+            var nomeGrupo = CriarNomeGrupo(emailUsuarioLogado, emailUsuarioSelecionado);
+            var grupoExistente = await _databaseContext.Grupos.FirstOrDefaultAsync(grupo => grupo.Nome == nomeGrupo);
+
+            var usuarioLogado = await _databaseContext.Usuarios.FirstAsync(usuario => usuario.Email == emailUsuarioLogado);
+            var usuarioSelecionado = await _databaseContext.Usuarios.FirstAsync(usuario => usuario.Email == emailUsuarioSelecionado);
+
+            if (grupoExistente == null) {
+                var novoGrupo = new Grupo() {
+                    Nome = nomeGrupo,
+                    Usuarios = JsonConvert.SerializeObject(new List<Usuario>() {
+                        usuarioLogado,
+                        usuarioSelecionado
+                    })
+                };
+
+                await _databaseContext.Grupos.AddAsync(novoGrupo);
+                await _databaseContext.SaveChangesAsync();
+            }
+        }
+
+        private string CriarNomeGrupo(string emailUsuarioLogado, string emailUsuarioSelecionado) {
+            var emails = new List<string>() { emailUsuarioLogado, emailUsuarioSelecionado };
+            var emailsOrdenados = emails.OrderBy(email => email).ToList();
+
+            return emailsOrdenados[0] + emailsOrdenados[1];
+        }
     }
 }
