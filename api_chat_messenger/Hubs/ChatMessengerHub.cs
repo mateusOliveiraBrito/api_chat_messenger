@@ -43,6 +43,9 @@ namespace api_chat_messenger.Hubs {
             _databaseContext.Usuarios.Update(usuarioLogado);
             await _databaseContext.SaveChangesAsync();
             await Clients.Caller.SendAsync("ConfirmarLogin", true, usuarioLogado, string.Empty);
+
+            var usuarios = await _databaseContext.Usuarios.ToListAsync();
+            await Clients.All.SendAsync("ReceberListaDeUsuarios", usuarios);
         }
 
         public async Task RealizarLogout(Usuario usuarioLogout) {
@@ -53,6 +56,9 @@ namespace api_chat_messenger.Hubs {
             await _databaseContext.SaveChangesAsync();
 
             await RemoverConnectionIdDoUsuario(usuarioLogout);
+
+            var usuarios = await _databaseContext.Usuarios.ToListAsync();
+            await Clients.All.SendAsync("ReceberListaDeUsuarios", usuarios);
         }
 
         public async Task AdicionarConnectionIdDoUsuario(Usuario usuario) {
