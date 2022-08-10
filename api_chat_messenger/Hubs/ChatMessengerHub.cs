@@ -45,7 +45,8 @@ namespace api_chat_messenger.Hubs {
             await Clients.Caller.SendAsync("ConfirmarLogin", true, usuarioLogado, string.Empty);
 
             var usuarios = await _databaseContext.Usuarios.ToListAsync();
-            await Clients.All.SendAsync("ReceberListaDeUsuarios", usuarios);
+
+            await NotificarMudancaNosUsuarios();
         }
 
         public async Task RealizarLogout(Usuario usuarioLogout) {
@@ -58,7 +59,8 @@ namespace api_chat_messenger.Hubs {
             await RemoverConnectionIdDoUsuario(usuarioLogout);
 
             var usuarios = await _databaseContext.Usuarios.ToListAsync();
-            await Clients.All.SendAsync("ReceberListaDeUsuarios", usuarios);
+
+            await NotificarMudancaNosUsuarios();
         }
 
         public async Task AdicionarConnectionIdDoUsuario(Usuario usuario) {
@@ -73,9 +75,12 @@ namespace api_chat_messenger.Hubs {
                     connectionIdsBanco.Add(connectionIdAtual);
 
                     usuarioDoBanco.ConnectionId = JsonConvert.SerializeObject(connectionIdsBanco);
+                    usuarioDoBanco.isOnline = true;
 
                     _databaseContext.Usuarios.Update(usuarioDoBanco);
                     await _databaseContext.SaveChangesAsync();
+
+                    await NotificarMudancaNosUsuarios();
 
                     foreach (var connectionId in connectionIdsBanco) {
                         foreach (var grupo in gruposDoUsuario) {
@@ -118,7 +123,7 @@ namespace api_chat_messenger.Hubs {
                     _databaseContext.Usuarios.Update(usuarioDoBanco);
                     await _databaseContext.SaveChangesAsync();
 
-                    await ObterListaDeUsuarios();
+                    await NotificarMudancaNosUsuarios();
                 }
 
                 var gruposDoUsuario = await _databaseContext.Grupos.Where(grupo => grupo.Usuarios.Contains(usuarioDoBanco.Email)).ToListAsync();
@@ -133,6 +138,11 @@ namespace api_chat_messenger.Hubs {
         public async Task ObterListaDeUsuarios() {
             var usuarios = await _databaseContext.Usuarios.ToListAsync();
             await Clients.Caller.SendAsync("ReceberListaDeUsuarios", usuarios);
+        }
+
+        public async Task NotificarMudancaNosUsuarios() {
+            var usuarios = await _databaseContext.Usuarios.ToListAsync();
+            await Clients.All.SendAsync("ReceberListaDeUsuarios", usuarios);
         }
 
         public async Task CriarOuAbrirGrupo(string emailUsuarioLogado, string emailUsuarioSelecionado) {
