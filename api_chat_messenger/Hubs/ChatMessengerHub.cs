@@ -159,6 +159,8 @@ namespace api_chat_messenger.Hubs {
                     await Groups.AddToGroupAsync(connectionId, nomeGrupo);
                 }
             }
+
+            await Clients.Caller.SendAsync("AbrirGrupo", nomeGrupo);
         }
 
         private string CriarNomeGrupo(string emailUsuarioLogado, string emailUsuarioSelecionado) {
