@@ -1,7 +1,9 @@
 ﻿using api_chat_messenger.Database;
 using api_chat_messenger.Models;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -37,6 +39,50 @@ namespace api_chat_messenger.Hubs {
             }
 
             await Clients.Caller.SendAsync("ConfirmarLogin", true, usuarioLogado, string.Empty);
+        }
+
+        public async Task AdicionarConnectionIdDoUsuario(Usuario usuario) {
+            var usuarioDoBanco = _databaseContext.Usuarios.First(u => u.Id == usuario.Id);
+
+            if (usuarioDoBanco.ConnectionId?.Length > 0) {
+                var connectionIdsBanco = JsonConvert.DeserializeObject<List<string>>(usuarioDoBanco.ConnectionId);
+
+                var connectionIdAtual = Context.ConnectionId;
+                if (!connectionIdsBanco.Contains(connectionIdAtual)) {
+                    connectionIdsBanco.Add(connectionIdAtual);
+
+                    usuarioDoBanco.ConnectionId = JsonConvert.SerializeObject(connectionIdsBanco);
+
+                    _databaseContext.Usuarios.Update(usuarioDoBanco);
+                    await _databaseContext.SaveChangesAsync();
+                }
+
+                return;
+            }
+
+            var connectionIds = new List<string>() { Context.ConnectionId };
+
+            usuarioDoBanco.ConnectionId = JsonConvert.SerializeObject(connectionIds);
+
+            _databaseContext.Usuarios.Update(usuarioDoBanco);
+            await _databaseContext.SaveChangesAsync();
+        }
+
+        public async Task RemoverConnectionIdDoUsuario(Usuario usuario) {
+            var usuarioDoBanco = _databaseContext.Usuarios.First(u => u.Id == usuario.Id);
+
+            if (usuarioDoBanco.ConnectionId.Length > 0) {
+                var connectionIds = JsonConvert.DeserializeObject<List<string>>(usuarioDoBanco.ConnectionId);
+
+                var connectionIdAtual = Context.ConnectionId;
+                if (connectionIds.Contains(connectionIdAtual)) {
+                    connectionIds.Remove(connectionIdAtual);
+
+                    usuarioDoBanco.ConnectionId = JsonConvert.SerializeObject(connectionIds);
+                    _databaseContext.Usuarios.Update(usuarioDoBanco);
+                    await _databaseContext.SaveChangesAsync();
+                }
+            }
         }
     }
 }
