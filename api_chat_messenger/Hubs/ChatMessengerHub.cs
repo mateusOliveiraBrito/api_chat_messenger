@@ -189,7 +189,7 @@ namespace api_chat_messenger.Hubs {
             await _databaseContext.Mensagens.AddAsync(mensagem);
             await _databaseContext.SaveChangesAsync();
 
-            await Clients.Group(nomeDoGrupo).SendAsync("ReceberMensagem", mensagem);
+            await Clients.Group(nomeDoGrupo).SendAsync("ReceberMensagem", mensagem, nomeDoGrupo);
         }
     }
 }
