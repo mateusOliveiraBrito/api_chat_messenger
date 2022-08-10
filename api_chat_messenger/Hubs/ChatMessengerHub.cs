@@ -1,6 +1,7 @@
 ﻿using api_chat_messenger.Database;
 using api_chat_messenger.Models;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -83,6 +84,11 @@ namespace api_chat_messenger.Hubs {
                     await _databaseContext.SaveChangesAsync();
                 }
             }
+        }
+
+        public async Task ObterListaDeUsuarios() {
+            var usuarios = await _databaseContext.Usuarios.ToListAsync();
+            await Clients.Caller.SendAsync("ReceberListaDeUsuarios", usuarios);
         }
     }
 }
