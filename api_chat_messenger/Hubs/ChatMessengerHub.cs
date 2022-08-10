@@ -169,5 +169,27 @@ namespace api_chat_messenger.Hubs {
 
             return emailsOrdenados[0] + emailsOrdenados[1];
         }
+
+        public async Task EnviarMensagem(Usuario usuario, string conteudoMensagem, string nomeDoGrupo) {
+            var grupoExistente = await _databaseContext.Grupos.FirstAsync(grupo => grupo.Nome == nomeDoGrupo);
+
+            if (!grupoExistente.Usuarios.Contains(usuario.Email)) {
+                throw new Exception("O usuário logado não pertence a este grupo");
+            }
+
+            var mensagem = new Mensagem() {
+                NomeGrupo = nomeDoGrupo,
+                Texto = conteudoMensagem,
+                UsuarioId = usuario.Id,
+                UsuarioJson = JsonConvert.SerializeObject(usuario),
+                Usuario = usuario,
+                DataCriacao = DateTime.Now
+            };
+
+            await _databaseContext.Mensagens.AddAsync(mensagem);
+            await _databaseContext.SaveChangesAsync();
+
+            await Clients.Group(nomeDoGrupo).SendAsync("ReceberMensagem", mensagem);
+        }
     }
 }
