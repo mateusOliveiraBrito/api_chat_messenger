@@ -160,7 +160,15 @@ namespace api_chat_messenger.Hubs {
                 }
             }
 
-            await Clients.Caller.SendAsync("AbrirGrupo", nomeGrupo);
+            var mensagensDoGrupo = await _databaseContext.Mensagens.Where(mensagem => mensagem.NomeGrupo == nomeGrupo)
+                                                                   .OrderBy(mensagem => mensagem.DataCriacao)
+                                                                   .ToListAsync();
+
+            for (int i = 0; i < mensagensDoGrupo.Count; i++) {
+                mensagensDoGrupo[i].Usuario = JsonConvert.DeserializeObject<Usuario>(mensagensDoGrupo[i].UsuarioJson);
+            }
+
+            await Clients.Caller.SendAsync("AbrirGrupo", nomeGrupo, mensagensDoGrupo);
         }
 
         private string CriarNomeGrupo(string emailUsuarioLogado, string emailUsuarioSelecionado) {
