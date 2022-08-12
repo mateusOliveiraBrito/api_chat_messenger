@@ -34,8 +34,17 @@ namespace api_chat_messenger {
                 app.UseHsts();
             }
 
+            //Configuração produção
+            //app.UseCors(builder => {
+            //    builder.WithOrigins("https://chatmessengerwebapp.azurewebsites.net")
+            //        .AllowAnyHeader()
+            //        .AllowAnyMethod()
+            //        .AllowCredentials();
+            //});
+
+            //Configuração local
             app.UseCors(builder => {
-                builder.WithOrigins("https://chatmessengerwebapp.azurewebsites.net")
+                builder.WithOrigins("https://localhost:5003")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
